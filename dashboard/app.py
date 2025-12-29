@@ -190,60 +190,79 @@ with st.expander("🛡️ Customer Base Is Concentrated and Vulnerable", expande
 st.markdown("---")
 
 
-# === Layout: Two Columns ===
-col1, col2 = st.columns(2)
+# === Customer Count and Revenue by Segment (Stacked, Same Order) ===
+st.subheader("📊 Customer Distribution and Revenue Impact by Segment")
 
-with col1:
-    # Segment Distribution
-    segment_counts = df['Segment'].value_counts().reset_index()
-    segment_counts.columns = ['Segment', 'Count']
-    fig_pie = px.pie(segment_counts, values='Count', names='Segment', title="Customer Segments")
-    st.plotly_chart(fig_pie, use_container_width=True)
+# Calculate revenue per segment and sort descending (highest revenue at top)
+segment_rev = df.groupby('Segment')['monetary'].sum().reset_index()
+segment_rev = segment_rev.sort_values('monetary', ascending=False)  # Highest revenue first
+segment_order = segment_rev['Segment'].tolist()  # Save the order
 
-with col2:
-    # Monetary by Segment
-    segment_monetary = df.groupby('Segment')['monetary'].sum().sort_values(ascending=False).reset_index()
-    fig_bar = px.bar(segment_monetary, x='Segment', y='monetary', title="Revenue by Segment (£)")
-    st.plotly_chart(fig_bar, use_container_width=True)
+# === Chart 2: Total Revenue per Segment ===
+st.markdown("**Total Revenue per Segment**")
 
-
-# === Revenue by Segment (Fixed label cutoff) ===
-st.subheader("💰 Total Revenue Contribution by Customer Segment")
-
-segment_rev = df.groupby('Segment')['monetary'].sum().sort_values(ascending=True).reset_index()
-
-fig_bar = px.bar(
+# Use the same ordered segment_rev
+fig_rev = px.bar(
     segment_rev,
     x='monetary',
     y='Segment',
     orientation='h',
-    title="Total Revenue by Customer Segment (£)",
     color='Segment',
-    height=600,  # Increased height for better spacing
+    height=600,
     text=segment_rev['monetary'].apply(lambda x: f"£{x:,.0f}")
 )
 
-# Key fixes for label cutoff
-fig_bar.update_traces(
-    textposition='outside',  # Keep outside for impact
-    cliponaxis=False         # Allows text to extend beyond plot area
-)
-
-fig_bar.update_layout(
+fig_rev.update_traces(textposition='outside', cliponaxis=False)
+fig_rev.update_layout(
     showlegend=False,
     xaxis_title="Total Revenue (£)",
     yaxis_title="Customer Segment",
-    margin=dict(l=0, r=50, t=80, b=60),  # Extra right margin for long labels
-    uniformtext_minsize=10,
-    uniformtext_mode='hide'  # Hides text if too small (fallback safety)
+    margin=dict(l=150, r=200, t=80, b=60)
 )
 
-st.plotly_chart(fig_bar, use_container_width=True)
+st.plotly_chart(fig_rev, use_container_width=True)
 
-# Note below chart
+# === Chart 1: Number of Customers per Segment ===
+st.markdown("**Number of Customers per Segment**")
+
+segment_count = df['Segment'].value_counts().reset_index()
+segment_count.columns = ['Segment', 'Customer Count']
+# Reorder to match revenue order
+segment_count['Segment'] = pd.Categorical(segment_count['Segment'], categories=segment_order)
+segment_count = segment_count.sort_values('Segment')
+
+fig_count = px.bar(
+    segment_count,
+    x='Customer Count',
+    y='Segment',
+    orientation='h',
+    color='Segment',
+    height=600,
+    text='Customer Count'
+)
+
+fig_count.update_traces(textposition='outside', cliponaxis=False)
+fig_count.update_layout(
+    showlegend=False,
+    xaxis_title="Number of Customers",
+    yaxis_title="Customer Segment",
+    margin=dict(l=150, r=200, t=80, b=60)
+)
+
+st.plotly_chart(fig_count, use_container_width=True)
+
+# === Key Insight ===
+total_customers = len(df)
 total_rev = df['monetary'].sum()
-champions_share = (df[df['Segment']=='Champions']['monetary'].sum() / total_rev * 100)
-st.markdown(f"**Insight:** Champions alone drive **{champions_share:.1f}%** of total revenue.")
+champions_customers = len(df[df['Segment'] == 'Champions'])
+champions_rev_share = (df[df['Segment'] == 'Champions']['monetary'].sum() / total_rev) * 100 if total_rev > 0 else 0
+
+st.markdown(
+    f"**Key Insight:** Champions represent only **{champions_customers:,} customers** "
+    f"({(champions_customers / total_customers * 100):.1f}% of total) "
+    f"but generate **{champions_rev_share:.1f}%** of all revenue."
+)
+
 
 # === Top Customers Table ===
 st.subheader("Top 10 Champions")
