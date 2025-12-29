@@ -4,13 +4,13 @@
 
 ![E-Commerce Customer Intelligence Dashboard](images/dashboard_hero.png)
 
-**£1.46M revenue at risk identified** — end-to-end RFM analysis on real e-commerce data with actionable insights.
+**£1.46M revenue at risk identified** - end-to-end RFM analysis on real e-commerce data with actionable insights.
 
 ## 🚀 Key Business Insights
 - Champions drive **44.9%** of total revenue
-- **£1.46M** at risk from vulnerable customers — win-back opportunity
+- **£1.46M** at risk from vulnerable customers - win-back opportunity
 - International customers 5–50x more valuable than average
-- UK dominates revenue but lower customer value — growth lies abroad
+- UK dominates revenue but lower customer value - growth lies abroad
 
 ## 🛠️ About This Project
 Real-world transactional data → cleaned → SQL aggregation → RFM segmentation → interactive Streamlit dashboard.
